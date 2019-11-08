@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
-import java.util.Stack;
 
 public class Main {
     static final int HIGHEST_EXPONENT = 10;
@@ -80,7 +79,6 @@ public class Main {
             int coeff = 0, exponent = 0;
             for(int i = 0; nodes[i] != null; i++) // Go up to nodes.length because dx is not actually added to array
             { 
-                //System.out.println(nodes[i]);
                 multipleTerms = false;
                 coeff = 0;
                 exponent = 0;
@@ -95,18 +93,7 @@ public class Main {
                         if(nodes[i].charAt(0) == '-' && nodes[i].charAt(1) == 'x')
                             coeff = -1;
                         else
-                        /*temp = nodes[i].substring(0, xIndex);
-                        if(temp.contains("-"))
-                        {
-                            if(Character.isDigit(temp.charAt(xIndex - 1)))
-                                coeff = Integer.parseInt(temp.substring(0, xIndex));
-                            coeff = -1 * coeff;
-                        }
-                        else
-                            coeff = Integer.parseInt(nodes[i].substring(0, xIndex));    // Get coefficient of equation substring
-                        */
-                        coeff = Integer.parseInt(nodes[i].substring(0, xIndex)); 
-                        //System.out.print("test");
+                            coeff = Integer.parseInt(nodes[i].substring(0, xIndex)); 
                     }
                     if(carrotIndex == -1) // If x^1 == x
                         exponent = 1;
@@ -153,7 +140,9 @@ public class Main {
                     binaryTree.insert(data);
                 }
             }   // END for loop to read through equation
+            //binaryTree.deleteNode(binaryTree.getRoot(), 10);
             reverseInOrder(binaryTree, binaryTree.getRoot());
+            //binaryTree.deleteNode(binaryTree.getRoot(), 3);
             if(boundaries) // If definite integral (there are boundaries)
             {
                 /* 
@@ -186,23 +175,9 @@ public class Main {
                     System.out.print(", " + lowerBound + "|" + upperBound + " = " + 0);
                 else
                 {
-                    Stack<Node<Payload>> stack = new Stack<>();
                     double upperBoundSum = 0, lowerBoundSum = 0;
-                    //lowerBoundSum = reverseInOrderBounded(binaryTree.getRoot(), lowerBound, lowerBoundSum);
-                    //upperBoundSum = reverseInOrderBounded(binaryTree.getRoot(), upperBound, upperBoundSum);
-                    reverseInOrderBoundedStack(stack, binaryTree.getRoot());
-                    while(stack.size() > 0)
-                    {
-                        lowerBoundSum += definiteIntegrate(stack.pop(), lowerBound);
-                    }
-                    reverseInOrderBoundedStack(stack, binaryTree.getRoot());
-                    while(stack.size() > 0)
-                    {
-                        upperBoundSum += definiteIntegrate(stack.pop(), upperBound);
-                    }
-                    /*if(upperBoundSum - lowerBoundSum == Math.floor(upperBoundSum - lowerBoundSum))
-                        System.out.printf(", " + lowerBound + "|" + upperBound + " = " + ((int) (upperBoundSum - lowerBoundSum)));
-                    else*/
+                    lowerBoundSum = reverseInOrderBounded(binaryTree.getRoot(), lowerBound);
+                    upperBoundSum = reverseInOrderBounded(binaryTree.getRoot(), upperBound);
                     System.out.printf(", " + lowerBound + "|" + upperBound + " = " + "%.3f", upperBoundSum - lowerBoundSum);
                 }
             }
@@ -214,42 +189,37 @@ public class Main {
             }
             System.out.println();
             binaryTree.deleteTree();
-            /*
-                Create another for loop to go through the binary tree (right most node to left most node -> highest to lowest exponent)
-                Acecss each node data while iterating through tree
-                Integrate the data and display integrated equation
-                If there was a boundary (pipeline character)
-                    Display the format for pipeline (integrated equation and definite integral answer)
-                Else
-                    Display the format for no pipeline (integrated equation with + C)
-            */
-            /* ---------------------NOTES------------------------ */
-            /* If coefficient is negative display absolute value of coefficient and display minus sign in equation
-                Make specific answer node displays if exponent is special (ie. -1 --> ln())   
-            */
         } // END while loop to read through whole file
-
+        //binaryTree.deleteNode(binaryTree.getRoot(), 10);
         input.close();
         fileReader.close();
     }
 
-    // This method calls reverseInorderRec() 
+    /**
+     * This method calls reverseInorderRec() 
+     * @param b binary tree to traverse
+     * @param root root node of tree
+    */
     public static void reverseInOrder(BinTree<Payload> b, Node<Payload> root)  { 
         reverseInOrderRec(b, root); 
     } 
     
-    // This method calls reverseInorderRecBounded() 
-    public static double reverseInOrderBounded(Node<Payload> root, int boundary, double sum)  { 
-        return reverseInOrderIteratedBounded(root, boundary, sum); 
+    /**
+     * This method calls reverseInorderRecBounded() 
+     * @param root root node of tree
+     * @param boundary boundary to calculate definite integral with
+     * @return definite integral answer
+     */
+    public static double reverseInOrderBounded(Node<Payload> root, int boundary)  { 
+        return reverseInOrderRecBounded(root, boundary); 
         
     } 
-    
-    public static void reverseInOrderBoundedStack(Stack<Node<Payload>> stack, Node<Payload> root)
-    {
-        reverseInOrderRecBounded(stack, root);
-    }
 
-    // A utility function to do revsrse in order traversal of BST and integrate without bounds
+    /**
+     * Traverses tree in reverse in order and prints unbounded integrated equation
+     * @param b binary tree to traverse
+     * @param root root of binary tree
+     */
     public static void reverseInOrderRec(BinTree<Payload> b, Node<Payload> root) { 
          if (root != null) { 
             reverseInOrderRec(b, root.getRight());
@@ -258,70 +228,45 @@ public class Main {
          } 
     }
 
-    public static void reverseInOrderRecBounded(Stack<Node<Payload>> s, Node<Payload> root) { 
-        if (root != null) { 
-           reverseInOrderRecBounded(s, root.getRight()); 
-           s.push(root);
-           reverseInOrderRecBounded(s, root.getLeft()); 
-        } 
-    }
-
-    // A utility function to do reverse in order traversal of BST and integrate with bounds
-    public static double reverseInOrderIteratedBounded(Node<Payload> root, int boundary, double sum) { 
+    /**
+     * Traverses tree in reverse in order and prints result to bounded integrated equation
+     * @param root node to calculate
+     * @param boundary boundary to calculate definite integral with
+     * @return result of definite inegral
+     */
+    public static double reverseInOrderRecBounded(Node<Payload> root, int boundary) { 
         
         if (root == null)
-        { 
            return 0;
-        }
-        Stack<Node<Payload>> stack = new Stack<Node<Payload>>(); 
-  
-        // traverse the tree 
-        while (root != null || stack.size() > 0) 
-        { 
-  
-            /* Reach the right most Node of the 
-            root Node */
-            while (root !=  null) 
-            { 
-                /* place pointer to a tree node on 
-                   the stack before traversing 
-                  the node's right subtree */
-                stack.push(root);   // Puts right subtree onto stack initially, then adds left subtree when it is not null
-                root = root.getRight(); 
-            } 
-  
-            /* Root must be NULL at this point */
-            root = stack.pop(); 
-  
-            sum += definiteIntegrate(root, boundary);
-  
-            /*  After visiting the node and it's right subtree,
-                next visit the left subtree */
-            root = root.getLeft(); 
-        }
-        return sum; 
+        return (definiteIntegrate(root, boundary) + reverseInOrderRecBounded(root.getLeft(), boundary)
+                + reverseInOrderRecBounded(root.getRight(), boundary));
     }
-     
+    
+    /**
+     * Prints integrated form of equation unbounded
+     * @param tree tree to traverse
+     * @param root node to integrate
+     */
     public static void integrate(BinTree<Payload> tree, Node<Payload> root)
     {
         boolean firstNode = false;
         Node<Payload> rightMost = getRightMost(tree.getRoot());
-        //Node<Payload> leftMost = getLeftMost(tree.getRoot());
-        //System.out.println("B: " + rightMost.getData().getExponent());
+
+        // Get right-most node to check if integrating first node in integral
         if(root.getData().getCoefficient() == rightMost.getData().getCoefficient())
         {
             if(root.getData().getExponent() == rightMost.getData().getExponent())
                 firstNode = true;
         }
 
-        int coefficient = root.getData().getCoefficient();
-        int divisor = root.getData().getExponent();
+        int coefficient = root.getData().getCoefficient();  // Store coefficient
+        int divisor = root.getData().getExponent(); // Store exponent to divide
 
         boolean divisible = false;
-        root.getData().setExponent(++divisor);
-        divisor = root.getData().getExponent();
+        root.getData().setExponent(++divisor);  // Increment exponent in integration
+        divisor = root.getData().getExponent(); // Store number to divide coefficient by in integration
 
-        if(coefficient == 0)
+        if(coefficient == 0)    // If terms cancel or there are no terms
             System.out.print(0);
         else
         {
@@ -366,7 +311,7 @@ public class Main {
                 }
                 else if(divisor == 1)  // Coefficient and x (no ^)
                 {
-                    if(coefficient != 1)
+                    if(coefficient != 1)    // Print out coefficient if it is not 1 (sign checking above accounts for -1 coefficient)
                         System.out.print(coefficient);
                     System.out.print("x");
                 }
@@ -374,11 +319,12 @@ public class Main {
                 {
                     if(divisible)
                     {
-                        if(coefficient != 1)
+                        if(coefficient != 1)    // Print out coefficient if it is not 1 (sign checking above accounts for -1 coefficient)
                             System.out.print(coefficient);
                     }
                     else
                     {
+                        // Pass in absolute value of divisor when simplifying to prevent double negative
                         System.out.print("(" + simplifyFraction(coefficient, Math.abs(divisor)) + ")");
                     }
                     System.out.print("x^" + divisor); // Divisor is same number as integrated exponent
@@ -386,7 +332,7 @@ public class Main {
             }
             else
             {
-                if(coefficient % divisor == 0)
+                if(coefficient % divisor == 0)  // Simplify coefficient if it is reducable to integer from fraction
                 {
                     coefficient = coefficient / divisor;
                     divisible = true;
@@ -397,9 +343,9 @@ public class Main {
                 }
                 else if(divisor == 1)  // Coefficient and x (no ^)
                 {
-                    if(coefficient != 1)
+                    if(coefficient != 1)    // If coefficient greater than 1, need to display coefficient
                     {
-                        if(coefficient == -1)
+                        if(coefficient == -1)   // Print minus sign if coefficient is -1 instead of -1 coefficient
                             System.out.print("-");
                         else
                             System.out.print(coefficient);
@@ -410,13 +356,13 @@ public class Main {
                 {
                     if(divisible)
                     {
-                        if(coefficient != 1)
+                        if(coefficient != 1)    // If coefficient greater than 1, need to display coefficient
                         {
-                            if(coefficient == -1)
+                            if(coefficient == -1)   // Print minus sign if coefficient is -1 instead of -1 coefficient
                                 System.out.print("-");
                             else
                                 System.out.print(coefficient);
-                        }
+                        }   // Otherwise don't display a coefficient because it is 1
                     }
                     else
                         System.out.print("(" + simplifyFraction(coefficient, Math.abs(divisor)) + ")");
@@ -424,27 +370,27 @@ public class Main {
                 }
             }
         }
-        /*if(root.getData().getCoefficient() == leftMost.getData().getCoefficient())
-        {
-            if(root.getData().getExponent() == leftMost.getData().getExponent())
-                System.out.print(" + C");
-        }*/
-        
     }
 
+    /**
+     * Calculates result of single node with boundary after integration
+     * @param root node to calculate
+     * @param boundary boundary to use with calculation
+     * @return result of single node integrated with boundary
+     */
     public static double definiteIntegrate(Node<Payload> root, int boundary)
     {
-        // MATH isn't working, could be that coefficient isn't negative when it should be from after integrating equation
         double sum = 0;
         sum = Math.pow(boundary, root.getData().getExponent());
-        //System.out.println("sum: " + sum);
         sum *= ((double)root.getData().getCoefficient() / root.getData().getExponent());
-        //sum *= sum2;
-        //System.out.print("sum: " + sum);
-        //System.out.println("sum2: " + (double)root.getData().getCoefficient() / root.getData().getExponent());
         return sum;
     }
 
+    /**
+     * Gets the right-most node of tree
+     * @param root root of tree
+     * @return right-most node of tree
+     */
     public static Node<Payload> getRightMost(Node<Payload> root)
     {
         if(root == null)
@@ -452,15 +398,6 @@ public class Main {
         if(root.getRight() == null)
             return root;
         return getRightMost(root.getRight());
-    }
-
-    public static Node<Payload> getLeftMost(Node<Payload> root)
-    {
-        if(root == null)
-            return null;
-        if(root.getLeft() == null)
-            return root;
-        return getLeftMost(root.getLeft());
     }
 
     /**
@@ -483,6 +420,7 @@ public class Main {
     public static String simplifyFraction(int a, int b)
     {
         int gcm = gcm(a,b);
+        //If denominator is negative, display absolute value of denominator and display minus sign in equation
         if(gcm < 0)
             gcm = Math.abs(gcm);
         return (a / gcm) + "/" + (b / gcm);
