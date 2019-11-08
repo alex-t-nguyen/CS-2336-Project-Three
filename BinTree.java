@@ -32,6 +32,7 @@ public class BinTree<T> {
     {
         return root;
     }
+    
     // FUNCTIONS
 
     /**
@@ -96,9 +97,51 @@ public class BinTree<T> {
      * Deletes node in binary tree
      * @param n node to delete
      */
-    public void deleteNode(Node<T> n)
+    public Node<T> deleteNode(Node<T> n, int exponent)
     {
 
+        // Base case if tree is empty
+        // Also if node to delete is not in tree
+        if(n == null)
+            return n;
+        
+        // Recur down the tree
+        // Goes until node to delete is found or null (if node is not in tree)
+        if(exponent < n.getData().getExponent())
+            n.setLeft(deleteNode(n.getLeft(), exponent));
+        else if(exponent > n.getData().getExponent())
+            n.setRight(deleteNode(n.getRight(), exponent));
+        else
+        {
+            // Node with only 1 child or no child
+            // Returns node to store child data in parent node --> child becomes its own parent
+            if(n.getLeft() == null)
+                return n.getRight();
+            else if(n.getRight() == null)
+                return n.getLeft();
+            
+            // Node with 2 children
+            // Get smallest node in node to delete's right subtree
+            n.getData().setExponent(getMinValue(n.getRight()));
+
+            // Delete the smallest node in node to delete's right subtree
+            n.setRight(deleteNode(n.getRight(), n.getData().getExponent()));
+        }
+        return n;
+    }
+
+    /**
+     * Returns the smallest value
+     * @param root node to check value of
+     * @return lowest exponent in branch
+     */
+    public int getMinValue(Node<T> root)
+    {
+        if(root == null)
+            return 0;
+        if(root.getLeft() == null)
+            return root.getData().getExponent();
+        return getMinValue(root.getLeft());
     }
 
     /**
@@ -108,22 +151,4 @@ public class BinTree<T> {
     {
         root = null;
     }
-    
-    /*
-    // This method mainly calls InorderRec() 
-    public void inorder() 
-    { 
-        inorderRec(this.root); 
-    } 
-   
-     // A utility function to do inorder traversal of BST 
-    public void inorderRec(Node<T> root) 
-    { 
-         if (root != null) { 
-             inorderRec(root.getLeft()); 
-             System.out.println(root.getData().getExponent()); 
-             inorderRec(root.getRight()); 
-         } 
-    } 
-    */
 }
